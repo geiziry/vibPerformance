@@ -1,0 +1,94 @@
+version: 1.0.{build}
+
+clone_depth: 1
+
+configuration:
+    - Release
+
+os: Visual Studio 2015
+image: Visual Studio 2015
+
+platform:
+    - x86
+    - x64
+
+environment:
+    MEX: -DBUILD_MEX=OFF
+    INSTALL_DIR: C:\projects\segyio-install
+    TWINE_PASSWORD:
+        secure: kTga6+rLL1fNpKqFNcX0QZNyqiYaHsEfSS4k6wvUoTE=
+    matrix:
+        - PYTHON: C:\Python27
+          LANG: -DBUILD_PYTHON=ON
+          PYTHON_VERSION: 27
+        - PYTHON: C:\Python35
+          LANG: -DBUILD_PYTHON=ON
+          PYTHON_VERSION: 35
+        - PYTHON: C:\Python36
+          LANG: -DBUILD_PYTHON=ON
+          PYTHON_VERSION: 36
+        - PYTHON: C:\Python37
+          LANG: -DBUILD_PYTHON=ON
+          PYTHON_VERSION: 37
+
+matrix:
+    fast_finish: true
+
+install:
+    - git submodule update --init --recursive
+    - IF DEFINED PYTHON (IF "%platform%" == "x64" SET PYTHON=%PYTHON%-x64)
+    - IF DEFINED PYTHON SET PATH=%PYTHON%;%PYTHON%\Scripts;%PATH%
+    - IF DEFINED PYTHON pip install -r requirements.txt
+    - IF DEFINED PYTHON pip install twine wheel pytest pytest-runner
+
+before_build:
+    - IF DEFINED PYTHON SET LANG=%LANG% -DPYTHON_EXECUTABLE=%PYTHON%\python
+    - git fetch --tags
+
+# python extensions with setup.py typically requires building with the same
+# compiler as python itself, but it seems that the extern C does a reasonable
+# job of keeping it binary compatible. For python < 3.0, copy the shared lib
+# into the build directory (because otherwise visual c++ 9.0 is invoked, and it
+# supports no C99. For newer pythons, setup.py is capable of building segyio
+build_script:
+    - cmake --version
+    - IF "%platform%" == "x64" set W64="-GVisual Studio 14 2015 Win64"
+    - mkdir build
+    - ps: pushd build
+    - cmake %APPVEYOR_BUILD_FOLDER%
+            %W64%
+            %MEX%
+            %LANG%
+            -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%
+            -DBUILD_SHARED_LIBS=ON
+    - cmake --build . --config "%configuration%" --target install
+    - ctest -C "%configuration%" --output-on-failure
+    - ps: popd
+    - ps: pushd build/python
+    - IF DEFINED PYTHON python %APPVEYOR_BUILD_FOLDER%/setup.py bdist_wheel
+    - ps: popd
+
+test_script:
+    - set PATH=%INSTALL_DIR%\bin;%PATH%
+    - ps: pushd build/python
+    - IF DEFINED PYTHON FOR /F "tokens=*" %%G IN ('dir /b dist\*.whl') DO
+        pip install dist/%%G
+    - ps: popd
+    - IF DEFINED PYTHON python -c
+        "import segyio;f=segyio.open('test-data/small.sgy');print(f.ilines)"
+    - IF DEFINED PYTHON python python/examples/scan_min_max.py test-data/small.sgy
+
+before_deploy:
+    - ps: pushd build/python
+
+after_deploy:
+    - ps: popd
+
+deploy_script:
+    - ps: |
+          Write-Host "TAG: $env:APPVEYOR_REPO_TAG"
+          If ($env:APPVEYOR_REPO_TAG -eq "false") { return }
+
+          Write-Host "Uploading wheels to pypi"
+          Invoke-Expression "twine upload -u statoil-travis --skip-existing dist/*"
+          If ($LastExitCode -ne 0) { $host.SetShouldExit($LastExitCode) }

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>spectrumCalc</class>
+ <widget class="QWidget" name="spectrumCalc">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QChartView" name="s1_mag"/>
+     </item>
+     <item>
+      <widget class="QChartView" name="s1_logmag"/>
+     </item>
+     <item>
+      <widget class="QChartView" name="s1_phase"/>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QChartView" name="s2_mag"/>
+     </item>
+     <item>
+      <widget class="QChartView" name="s2_logmag"/>
+     </item>
+     <item>
+      <widget class="QChartView" name="s2_phase"/>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_4">
+     <item>
+      <widget class="QChartView" name="s3_mag"/>
+     </item>
+     <item>
+      <widget class="QChartView" name="s3_logmag"/>
+     </item>
+     <item>
+      <widget class="QChartView" name="s3_phase"/>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QChartView</class>
+   <extends>QGraphicsView</extends>
+   <header>QtCharts/QtCharts</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

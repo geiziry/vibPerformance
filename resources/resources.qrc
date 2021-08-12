@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>folder.png</file>
+        <file>add.png</file>
+        <file>reset.png</file>
+        <file>reset.svg</file>
+    </qresource>
+</RCC>
